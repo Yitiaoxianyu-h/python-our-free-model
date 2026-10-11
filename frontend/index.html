@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Our Free Model · 本地控制台</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">Our Free Model <small>本地免费模型转发服务</small></div>
+    <nav id="nav">
+      <button data-page="overview" class="active">概览</button>
+      <button data-page="playground">游乐场</button>
+      <button data-page="models">模型清单</button>
+      <button data-page="channels">白嫖渠道</button>
+      <button data-page="eac">EAC 渠道</button>
+      <button data-page="usage">用量统计</button>
+      <button data-page="logs">日志</button>
+      <button data-page="settings">服务设置</button>
+      <button data-page="access">API 接入</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 概览 -->
+    <div class="page active" id="page-overview">
+      <div class="cards" id="overview-cards"></div>
+      <section class="block">
+        <h2>接入地址 <span class="hint">第三方 Agent 用此 base URL 直接调用</span></h2>
+        <div class="card">
+          <div class="row">
+            <code id="base-url">http://127.0.0.1:18900/v1</code>
+            <button class="btn" data-copy="#base-url">复制</button>
+            <button class="btn" id="goto-access">查看 API Key</button>
+          </div>
+          <p class="note">支持 <span class="mono">GET /v1/models</span>、<span class="mono">POST /v1/chat/completions</span>、<span class="mono">POST /v1/responses</span>（流式与非流式）。</p>
+        </div>
+      </section>
+      <section class="block">
+        <h2>最近刷新</h2>
+        <div class="card"><div class="note" id="overview-meta">加载中…</div></div>
+      </section>
+    </div>
+
+    <!-- 在线游乐场 -->
+    <div class="page" id="page-playground">
+      <div class="toolbar">
+        <select id="pg-model"></select>
+        <button class="btn" id="btn-pg-refresh">刷新模型</button>
+        <button class="btn" id="btn-pg-clear">清空对话</button>
+      </div>
+      <p class="note" id="pg-model-meta">选择模型后会自动填充上下文与推理配置。</p>
+      <div class="card" style="margin-top:12px">
+        <div class="row">
+          <label class="field" id="pg-effort-field">思考档位
+            <select id="pg-effort"></select>
+          </label>
+          <label class="field">温度
+            <input type="number" id="pg-temp" min="0" max="2" step="0.1" value="1" />
+          </label>
+          <label class="field">输出上限（token）
+            <input type="number" id="pg-maxtokens" min="1" step="256" />
+          </label>
+        </div>
+        <label class="field" style="margin-top:10px">系统提示词（可选）
+          <textarea id="pg-system" rows="2" placeholder="例如：你是一个简洁的中文助手"></textarea>
+        </label>
+      </div>
+      <div class="card" id="pg-chat" style="margin-top:12px"></div>
+      <div class="row" style="margin-top:12px; align-items:flex-end">
+        <textarea id="pg-input" rows="2" placeholder="输入消息，Enter 发送，Shift+Enter 换行" style="flex:1; min-width:220px"></textarea>
+        <button class="btn primary" id="btn-pg-send">发送</button>
+        <button class="btn" id="btn-pg-stop" style="display:none">停止</button>
+      </div>
+    </div>
+
+    <!-- 模型清单 -->
+    <div class="page" id="page-models">
+      <div class="toolbar">
+        <input type="text" id="model-search" placeholder="搜索名称或 ID" />
+        <select id="model-filter">
+          <option value="">全部渠道</option>
+          <option value="free">免费车道</option>
+          <option value="kilo">Kilo</option>
+          <option value="eac">EAC</option>
+        </select>
+        <select id="model-status">
+          <option value="">全部状态</option>
+          <option value="available">可用</option>
+          <option value="region-blocked">地区受限</option>
+          <option value="unavailable">不可用</option>
+          <option value="unknown">未判定</option>
+        </select>
+        <button class="btn" id="btn-refresh">刷新清单</button>
+        <button class="btn" id="btn-reprobe">主动探测</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>模型</th><th>ID</th><th>渠道</th><th>能力</th><th>状态</th><th></th></tr></thead>
+          <tbody id="models-body"><tr><td colspan="6" class="spinner">加载中…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 白嫖渠道 -->
+    <div class="page" id="page-channels">
+      <div class="card">
+        <h2>白嫖账号渠道</h2>
+        <p class="note">
+          原版插件内置 CodeArts、CodeBuddy、WorkBuddy、LobsterAI、Qoder（国际版/中国版）、TRAE、Cline、
+          Loomy、Raccoon、MiniMax Code、ZCode、Gemini 共 13 个账号渠道，各自带浏览器/设备码/短信登录、
+          账号池、积分领取与本地 OpenAI 网关。
+        </p>
+        <p class="note">
+          本 Python 移植版的渠道框架已落地（凭据存储、账号池、网关中继）；<b>各渠道的登录流程正逐家移植</b>。
+          完成情况见项目根目录 <span class="mono">PROGRESS.md</span>。
+        </p>
+      </div>
+      <div class="cards" id="channels-grid"></div>
+      <section class="block">
+        <h2>已登录账号 <span class="hint">停用只影响自动选号；凭据仍会保留</span></h2>
+        <div class="card">
+          <table>
+            <thead><tr><th>渠道</th><th>昵称</th><th>凭据</th><th>启用</th><th></th></tr></thead>
+            <tbody id="accounts-body"><tr><td colspan="5" class="spinner">暂无账号</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- EAC -->
+    <div class="page" id="page-eac">
+      <div class="cards" id="eac-cards"></div>
+
+      <section class="block">
+        <h2>GitHub 授权 <span class="hint">点一下 → 浏览器登录并 star 本仓库 → 自动完成</span></h2>
+        <div class="card">
+          <p class="note">
+            上游网关的授权闸门要求「用 GitHub 登录 + 已 star
+            <span class="mono" id="eac-repo">Ebony-Vinyl/dsh-our-free-model</span>」后才放行对话。
+          </p>
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" id="btn-eac-login">用 GitHub 授权</button>
+            <a class="btn" id="eac-login-link" target="_blank" rel="noreferrer" style="display:none">打开授权页</a>
+            <button class="btn" id="btn-eac-logout">退出授权</button>
+            <button class="btn" id="btn-eac-pool">读取资源池</button>
+          </div>
+          <p class="note" id="eac-auth-meta" style="margin-top:10px"></p>
+        </div>
+      </section>
+
+      <section class="block">
+        <details>
+          <summary style="cursor:pointer;color:var(--muted);font-size:13px">高级：使用自建网关（可选，覆盖内置凭据）</summary>
+          <div class="card" style="margin-top:12px">
+            <div class="row">
+              <label class="field">模式
+                <select id="eac-mode">
+                  <option value="worker">worker（签名网关，推荐）</option>
+                  <option value="direct">direct（Bearer API Key）</option>
+                </select>
+              </label>
+              <label class="field grow">网关地址（要以 /v1 结尾）
+                <input type="text" id="eac-base" placeholder="https://your-gateway.example/v1" />
+              </label>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <label class="field grow" id="eac-signkey-field">HMAC 签名密钥
+                <input type="text" id="eac-signkey" placeholder="worker 模式必填" />
+              </label>
+              <label class="field grow" id="eac-apikey-field" style="display:none">网关 API Key
+                <input type="text" id="eac-apikey" placeholder="direct 模式必填" />
+              </label>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <label class="field grow">模型名单（可选，逗号分隔；网关拉不到时用作回退）
+                <input type="text" id="eac-models" placeholder="deepseek-ai/deepseek-v4.1-flash, z-ai/glm-5.3" />
+              </label>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <button class="btn primary" id="btn-eac-save">保存网关配置</button>
+              <button class="btn" id="btn-eac-clear">恢复使用内置凭据</button>
+            </div>
+            <p class="note" id="eac-gateway-meta" style="margin-top:10px"></p>
+          </div>
+        </details>
+      </section>
+    </div>
+
+    <!-- 日志 -->
+    <div class="page" id="page-logs">
+      <div class="toolbar">
+        <select id="log-model"><option value="">全部模型</option></select>
+        <label class="switch"><input type="checkbox" id="log-errors" /> 只看错误</label>
+        <button class="btn" id="btn-logs-refresh">刷新</button>
+        <button class="btn" id="btn-logs-clear">清空日志</button>
+      </div>
+      <p class="note" id="logs-meta" style="margin:0 0 10px">加载中…</p>
+      <div class="card">
+        <table>
+          <thead><tr><th>时间</th><th>模型</th><th>渠道</th><th>结果</th><th>延迟</th><th>首字</th><th>输入</th><th>输出</th><th>错误</th><th></th></tr></thead>
+          <tbody id="logs-body"><tr><td colspan="10" class="spinner">加载中…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 用量统计 -->
+    <div class="page" id="page-usage">
+      <div class="cards" id="usage-cards"></div>
+      <section class="block">
+        <h2>按模型汇总</h2>
+        <div class="card">
+          <table>
+            <thead><tr><th>模型</th><th>输入</th><th>输出</th><th>思考</th><th>调用</th><th>失败</th></tr></thead>
+            <tbody id="usage-models"><tr><td colspan="6" class="spinner">加载中…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- 设置 -->
+    <div class="page" id="page-settings">
+      <div class="card">
+        <h2>服务设置</h2>
+        <div class="row" style="margin:14px 0">
+          <label class="switch"><input type="checkbox" id="set-enabled" /> 启用推理（关闭后 /v1 返回 503）</label>
+          <label class="switch"><input type="checkbox" id="set-forward" /> 启用本地 OpenAI 兼容转发口</label>
+          <label class="switch"><input type="checkbox" id="set-region" /> 在选择器中展示地区受限模型</label>
+          <label class="switch"><input type="checkbox" id="set-recovery" /> 断流自动续写</label>
+        </div>
+        <div class="row">
+          <label class="field">探测间隔（分钟）<input type="number" id="set-interval" min="1" /></label>
+          <label class="field">默认输出上限（token）<input type="number" id="set-maxtokens" min="512" /></label>
+        </div>
+        <div class="row" style="margin-top:16px">
+          <button class="btn primary" id="btn-save-settings">保存设置</button>
+        </div>
+        <p class="note" id="settings-meta" style="margin-top:12px"></p>
+      </div>
+      <section class="block">
+        <h2>出口代理 <span class="hint">可选；用于切换出口地区</span></h2>
+        <div class="card">
+          <div class="row">
+            <label class="switch"><input type="checkbox" id="set-egress" /> 启用出口代理</label>
+            <label class="field">模式
+              <select id="set-egress-mode">
+                <option value="client">client（http/https/socks5 代理地址）</option>
+                <option value="subscription">subscription（Clash 订阅，需 mihomo）</option>
+              </select>
+            </label>
+            <label class="field grow">代理 / 订阅地址
+              <input type="text" id="set-egress-url" placeholder="http://127.0.0.1:7890 或订阅链接" />
+            </label>
+          </div>
+          <p class="note" id="egress-meta" style="margin-top:10px"></p>
+          <p class="note">说明：client 模式通过环境变量/系统代理生效；subscription 模式需本机存在 mihomo，本移植暂未内置其守护逻辑。</p>
+        </div>
+      </section>
+      <section class="block">
+        <h2>局域网访问 <span class="hint">让同一网络中的其它设备也能用这些模型</span></h2>
+        <div class="card">
+          <div class="row">
+            <label class="switch"><input type="checkbox" id="set-lan" /> 启用局域网转发中继</label>
+            <label class="field">中继端口（0 = 自动分配）<input type="number" id="set-lan-port" min="0" /></label>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <span class="note" style="min-width:70px">中继 Key</span>
+            <code id="lan-key">••••••••</code>
+          <button class="btn" id="btn-show-lan-key">显示</button>
+          <button class="btn" data-copy-secret="lan">复制</button>
+          <button class="btn" id="btn-rotate-lan-key">轮换</button>
+          </div>
+          <p class="note" id="lan-meta" style="margin-top:10px">未启用。启用后下方显示可拨通的局域网地址。</p>
+          <p class="note">中继绑定所有网卡并要求独立 Key（与本机 Key 不通用）；仅放行 /v1/* 模型接口，且每个请求都需鉴权。</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="page" id="page-access">
+      <div class="card">
+        <h2>API 接入</h2>
+        <div class="row" style="margin:12px 0">
+          <span class="note" style="min-width:70px">Base URL</span>
+          <code id="access-base">http://127.0.0.1:18900/v1</code>
+          <button class="btn" data-copy="#access-base">复制</button>
+        </div>
+        <div class="row" style="margin:12px 0">
+          <span class="note" style="min-width:70px">API Key</span>
+          <code id="access-key">••••••••</code>
+          <button class="btn" id="btn-show-key">显示</button>
+          <button class="btn" data-copy-secret="access">复制</button>
+          <button class="btn" id="btn-rotate-key">轮换密钥</button>
+        </div>
+        <div class="row" style="margin:12px 0">
+          <span class="note" style="min-width:70px">校验方式</span>
+          <select id="key-mode">
+            <option value="auto">自动生成（默认）</option>
+            <option value="custom">自定义 Key</option>
+            <option value="off">不校验（任意 Key 均可）</option>
+          </select>
+          <input type="text" id="key-custom" placeholder="输入自定义 API Key" style="display:none" />
+          <button class="btn primary" id="btn-save-key-mode">保存</button>
+        </div>
+        <p class="note" id="key-mode-meta"></p>
+        <p class="note">把 Base URL 与 API Key 填入任意 OpenAI 兼容客户端，即可使用本站的免费模型。轮换后旧密钥立即失效。</p>
+      </div>
+      <section class="block">
+        <h2>调用示例</h2>
+        <div class="card">
+          <pre class="mono note" id="curl-example" style="white-space:pre-wrap; margin:0"></pre>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

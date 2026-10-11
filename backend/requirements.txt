@@ -1,0 +1,8 @@
+fastapi>=0.111
+uvicorn[standard]>=0.30
+httpx>=0.27
+httpx-socks>=0.9
+pydantic>=2.7
+cryptography>=42.0
+# Qoder 渠道需要驱动官方 qoder-auth-wasm.wasm 生成 COSY 签名（可选；缺失时该渠道不可用）
+wasmtime>=24.0
