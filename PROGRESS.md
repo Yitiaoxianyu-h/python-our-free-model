@@ -148,6 +148,10 @@ cd backend
   - 排除本机产物：`.venv/`、`.pip-cache/`、`__pycache__/`、`*.py[cod]`、`*.log`、`logs.jsonl`、`service.lock`、`.env*`。
   - 排除个人 IDE 配置：`.trae/`、`.vscode/`、`.idea/`。
   - 保留代码与文档：`backend/`、`frontend/`、`start.bat`、`PROGRESS.md`、`requirements.txt`、`README`（如有）。
+- [x] **新增 `README.md`**：面向使用者的完整说明——特性、环境要求、
+  启动方式（双击 `start.bat` / 命令行手动 / 并行实例）、打开 Web 控制台、第三方 Agent 接入（curl 与 OpenAI SDK 示例）、
+  API Key 三种校验方式、各页面功能表、局域网中继、启动参数与环境变量、目录结构、常见问题、已知边界、免责声明；
+  顶部与致谢处标注原项目 `https://github.com/Ebony-Vinyl/dsh-our-free-model`。
 
 ## 已知边界（如实说明）
 - **登录/推理未逐家真机验证**：本机没有各渠道账号，`run_login` / `start_login` 与真实 SSE 回包
